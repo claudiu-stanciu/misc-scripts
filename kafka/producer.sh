@@ -5,7 +5,7 @@
 YELLOW=$(tput setaf 3)
 RESET=$(tput sgr0)
 
-IMAGE='wurstmeister/kafka:latest'
+IMAGE='wurstmeister/kafka:2.12-2.4.1'
 BROKERS="${KAFKA_BROKERS:-localhost:9092}"
 MESSAGE_FILE=/dev/stdin
 TOPIC="${KAFKA_TOPIC:-$(whoami)-test}"
@@ -75,14 +75,18 @@ else
   echo "${YELLOW}Submitting messages from $MESSAGE_FILE to $TOPIC at $BROKERS...$RESET"
 fi
 
-EXTRA_PROPS=''
+#EXTRA_PROPS=''
 if [[ "$ACK_ALL" == 1 ]]; then
   EXTRA_PROPS="$EXTRA_PROPS --producer-property acks=all"
 fi
 
+echo $EXTRA_PROPS
+
 cat "$MESSAGE_FILE" | docker run -i --rm --entrypoint kafka-console-producer.sh --net host $IMAGE \
   --topic "$TOPIC" \
   --broker-list "$BROKERS" \
-  $EXTRA_PROPS
+  --property "parse.key=true" \
+  --property "key.separator=|" \
+  "$EXTRA_PROPS"
 
 echo ''
